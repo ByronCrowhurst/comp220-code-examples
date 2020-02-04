@@ -2,7 +2,9 @@
 #include <SDL.h>
 #include <gl\glew.h>
 #include <SDL_opengl.h>
-
+#include <cstdlib>
+#include <ctime>
+#include "Shader.h"
 
 int main(int argc, char ** argsv)
 {
@@ -66,6 +68,10 @@ int main(int argc, char ** argsv)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	// Give our vertices to OpenGL.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLuint programID = LoadShaders("BasicVert.glsl", "BasicFrag.glsl");
+	GLuint location = glGetUniformLocation(programID, "colorWeights");
+
+	srand(static_cast <unsigned> (time(0)));
 
 
 	//Event loop, we will loop until running is set to false, usually if escape has been pressed or window is closed
@@ -101,6 +107,12 @@ int main(int argc, char ** argsv)
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f); 
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		float r = static_cast <float> (rand() % 100) / 100.0f;
+		float g = static_cast <float> (rand() % 100) / 100.0f;
+		float b = static_cast <float> (rand() % 100) / 100.0f;
+
+		glUseProgram(programID);
+		glUniform3f(location, r, g, b);
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 		glVertexAttribPointer(
@@ -117,7 +129,7 @@ int main(int argc, char ** argsv)
 
 		SDL_GL_SwapWindow(window);
 	}
-
+	glDeleteProgram(programID);
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteVertexArrays(1, &vertexArray);
 	SDL_GL_DeleteContext(glContext);
