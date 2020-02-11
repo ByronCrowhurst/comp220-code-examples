@@ -4,6 +4,10 @@
 #include <SDL_opengl.h>
 #include <cstdlib>
 #include <ctime>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Shader.h"
 
 int main(int argc, char ** argsv)
@@ -70,8 +74,27 @@ int main(int argc, char ** argsv)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	GLuint programID = LoadShaders("BasicVert.glsl", "BasicFrag.glsl");
 	GLuint location = glGetUniformLocation(programID, "colorWeights");
+	GLuint modelMatrixLocation = glGetUniformLocation(programID, "model");
+	GLuint viewMatrixLocation = glGetUniformLocation(programID, "viewMat");
+	GLuint projectionMatrixLocation = glGetUniformLocation(programID, "projectionMat");
 
 	srand(static_cast <unsigned> (time(0)));
+
+	// Translate
+	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+	// Translation matrix set to identity
+	glm::mat4 translation = glm::mat4(1.0f);
+	// Create a translation matrix from given position
+	translation = glm::translate(translation, position);
+
+	// Camera initialization
+	glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, -10.0f);
+	glm::vec3 camTarget = position;
+	glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::mat4 view = glm::lookAt(camPosition, camTarget, camUp);
+
+	//Perspective Matrix. Every value must be a float
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f/720.0f, 0.1f, 100.0f);
 
 
 	//Event loop, we will loop until running is set to false, usually if escape has been pressed or window is closed
@@ -100,6 +123,9 @@ int main(int argc, char ** argsv)
 				case SDLK_ESCAPE:
 					running = false;
 					break;
+				case SDLK_w:
+					camTarget.x -= 1;
+					std::cout << camTarget.x << std::endl;
 				}
 			}
 		}
@@ -110,6 +136,12 @@ int main(int argc, char ** argsv)
 		float r = static_cast <float> (rand() % 100) / 100.0f;
 		float g = static_cast <float> (rand() % 100) / 100.0f;
 		float b = static_cast <float> (rand() % 100) / 100.0f;
+
+		// Send constant uniforms to shader
+		glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(translation));
+		glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projection));
+
 
 		glUseProgram(programID);
 		glUniform3f(location, r, g, b);
