@@ -9,9 +9,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Shader.h"
+#include "Vertex.h"
 
 int main(int argc, char ** argsv)
 {
+
 	//Initialises the SDL Library, passing in SDL_INIT_VIDEO to only initialise the video subsystems
 	//https://wiki.libsdl.org/SDL_Init
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -57,10 +59,20 @@ int main(int argc, char ** argsv)
 
 
 	// An array of 3 vectors which represents 3 vertices
-	static const GLfloat vertices[] = {
-	   -1.0f, -1.0f, 0.0f,
-	   1.0f, -1.0f, 0.0f,
-	   0.0f,  1.0f, 0.0f,
+	Vertex vertices[] = {
+		{-1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V0
+		{1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V1
+		{0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V2
+		{2.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f},		// V3
+		{-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V4
+		{1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V5
+		{0.0f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V6
+		{2.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.5f, 1.0f},		// V7
+		{-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V8
+		{1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V9
+		{0.0f,  1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V10
+		{2.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.5f, 1.0f}		// V11
+
 	};
 
 
@@ -71,7 +83,17 @@ int main(int argc, char ** argsv)
 	// The following commands will talk about our 'vertexbuffer' buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(Vertex), vertices, GL_STATIC_DRAW);
+
+
+	// Create buffer function
+	unsigned int indicies[] = { 0, 1, 2, 1, 3, 2, 1, 5, 0, 0, 5, 4 };
+
+	GLuint elementBuffer;
+	glGenBuffers(1, &elementBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * (sizeof(unsigned int)), indicies, GL_STATIC_DRAW);
+
 	GLuint programID = LoadShaders("BasicVert.glsl", "BasicFrag.glsl");
 	GLuint location = glGetUniformLocation(programID, "colorWeights");
 	GLuint modelMatrixLocation = glGetUniformLocation(programID, "model");
@@ -144,19 +166,38 @@ int main(int argc, char ** argsv)
 
 
 		glUseProgram(programID);
+
 		glUniform3f(location, r, g, b);
-		glEnableVertexAttribArray(0);
+
+		// bind our buffers a second time to be defensive
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+
+		// Remember to do this (eventually) https://en.cppreference.com/w/cpp/types/offsetof
+		// X Y Z
+		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
-			0,                  // stride
+			sizeof(Vertex),                  // stride
 			(void*)0            // array buffer offset
 		);
+		// RGBA
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(
+			1,
+			4,
+			GL_FLOAT,
+			GL_FALSE,
+			sizeof(Vertex),
+			(void*)(3 * (sizeof(float)))
+		);
+		
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+		//glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 		glDisableVertexAttribArray(0);
 
 		SDL_GL_SwapWindow(window);

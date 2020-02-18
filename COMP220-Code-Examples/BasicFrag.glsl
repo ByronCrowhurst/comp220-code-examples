@@ -1,8 +1,8 @@
 #version 330 core
 
 // vec4 uniform
-
-out vec3 color;
+in vec4 vertexColourOut;
+out vec4 color;
 uniform vec3 colorWeights;
 
 float rand(vec2 co){
@@ -11,5 +11,5 @@ float rand(vec2 co){
 
 void main()
 {
-  color = colorWeights;
+  color = vertexColourOut;
 }

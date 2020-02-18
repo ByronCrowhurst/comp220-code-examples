@@ -161,6 +161,7 @@ xcopy /Y /D /I ..\Libraries\SDL2_image-2.0.5\lib\x64\*.dll "$(OutDir)\*.dll"</Co
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicFrag.glsl" />
