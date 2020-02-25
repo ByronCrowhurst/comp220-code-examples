@@ -158,14 +158,18 @@ xcopy /Y /D /I ..\Libraries\SDL2_image-2.0.5\lib\x64\*.dll "$(OutDir)\*.dll"</Co
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicFrag.glsl" />
     <None Include="BasicVert.glsl" />
+    <None Include="TextureFrag.glsl" />
+    <None Include="TextureVert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

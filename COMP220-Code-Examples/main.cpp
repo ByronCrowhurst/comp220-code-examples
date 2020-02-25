@@ -11,6 +11,7 @@
 
 #include "Shader.h"
 #include "Vertex.h"
+#include "Texture.h"
 
 int main(int argc, char ** argsv)
 {
@@ -24,6 +25,8 @@ int main(int argc, char ** argsv)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDL_Init failed", SDL_GetError(), NULL);
 		return 1;
 	}
+
+	IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
 	//Create a window, note we have to free the pointer returned using the DestroyWindow Function
 	//https://wiki.libsdl.org/SDL_CreateWindow
@@ -62,18 +65,18 @@ int main(int argc, char ** argsv)
 
 	// An array of 3 vectors which represents 3 vertices
 	Vertex vertices[] = {
-		{-1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V0
-		{1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V1
-		{1.0f, 1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},		// V2
-		{-1.0f,  1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V3
-		{-1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},	// V4
-		{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V5
-		{0.0f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},	// V6
-		{2.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.5f, 1.0f},		// V7
-		{-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V8
-		{1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V9
-		{0.0f,  1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V10
-		{2.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.5f, 1.0f}		// V11
+		{-1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f, 0.0f, 0.0f},	// V0
+		{1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f, 1.0f, 0.0f},	// V1
+		{1.0f, 1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f, 0.0f, 1.0f},		// V2
+		{-1.0f,  1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f, 1.0f, 1.0f},	// V3
+		{-1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},	// V4
+		{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},	// V5
+		{0.0f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},	// V6
+		{2.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f},		// V7
+		{-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},	// V8
+		{1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},	// V9
+		{0.0f,  1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},	// V10
+		{2.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f}		// V11
 
 	};
 
@@ -91,22 +94,25 @@ int main(int argc, char ** argsv)
 	// Create buffer function
 	unsigned int indicies[] = { 2, 1, 0, 
 								3, 0, 2,
-								0, 3, 5,
-								5, 0, 4 
+								//0, 3, 5,
+								//5, 0, 4 
 	};
 
 	GLuint elementBuffer;
 	glGenBuffers(1, &elementBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * (sizeof(unsigned int)), indicies, GL_STATIC_DRAW);
+	
+	#pragma region GLInts
 
-	GLuint programID = LoadShaders("BasicVert.glsl", "BasicFrag.glsl");
+	GLuint programID = LoadShaders("TextureVert.glsl", "TextureFrag.glsl");
 	GLuint location = glGetUniformLocation(programID, "colorWeights");
 	GLuint modelMatrixLocation = glGetUniformLocation(programID, "model");
 	GLuint viewMatrixLocation = glGetUniformLocation(programID, "viewMat");
 	GLuint projectionMatrixLocation = glGetUniformLocation(programID, "projectionMat");
+	GLuint baseTextureLocation = glGetUniformLocation(programID, "baseTexture");
+	#pragma endregion
 
-	srand(static_cast <unsigned> (time(0)));
 
 	// Translate
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -122,6 +128,7 @@ int main(int argc, char ** argsv)
 	glm::vec3 camTarget = position;
 	glm::vec3 camDirection = glm::normalize(camPosition - camTarget);
 	glm::vec3 camRight = glm::normalize(glm::cross(worldSpaceUp, camDirection));
+	glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 camUp = glm::cross(camDirection, camRight);
 
 	#pragma region Camera Free Rotation
@@ -129,12 +136,12 @@ int main(int argc, char ** argsv)
 	
 	#pragma endregion
 
-	glm::mat4 view = glm::lookAt(camPosition, camTarget, worldSpaceUp);
+	glm::mat4 view = glm::lookAt(camPosition, camPosition + camFront, camUp);
 
 	//Perspective Matrix. Every value must be a float
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f/720.0f, 0.1f, 100.0f);
 
-
+	GLuint baseTextureID = loadTextureFromFile("Crate.JPG");
 	//Event loop, we will loop until running is set to false, usually if escape has been pressed or window is closed
 	bool running = true;
 	//SDL Event structure, this will be checked in the while loop
@@ -162,8 +169,8 @@ int main(int argc, char ** argsv)
 					running = false;
 					break;
 				case SDLK_w:
-					camTarget.x -= 1;
-					std::cout << camTarget.x << std::endl;
+					camPosition += camFront;
+					std::cout << camPosition.x << " " << camPosition.y << " " << camPosition.z << std::endl;
 				}
 			}
 		}
@@ -180,14 +187,20 @@ int main(int argc, char ** argsv)
 		glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
+		//Activate texture unit then bind it
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, baseTextureID);
 
 		glUseProgram(programID);
 
 		glUniform3f(location, r, g, b);
 
+		glUniform1i(baseTextureLocation, 0);
+
 		// bind our buffers a second time to be defensive
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+
 
 		// Remember to do this (eventually) https://en.cppreference.com/w/cpp/types/offsetof
 		// X Y Z
@@ -210,7 +223,15 @@ int main(int argc, char ** argsv)
 			sizeof(Vertex),
 			(void*)(3 * (sizeof(float)))
 		);
-		
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(
+			2,
+			2,
+			GL_FLOAT,
+			GL_FALSE,
+			sizeof(Vertex),
+			(void*)(7 * (sizeof(float)))
+		);
 		// Draw the triangle !
 		//glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
@@ -218,6 +239,7 @@ int main(int argc, char ** argsv)
 
 		SDL_GL_SwapWindow(window);
 	}
+	glDeleteTextures(1, &baseTextureID);
 	glDeleteProgram(programID);
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteVertexArrays(1, &vertexArray);
