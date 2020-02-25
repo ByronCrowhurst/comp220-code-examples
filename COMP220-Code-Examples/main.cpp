@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <GL\GLU.h>
 
 #include "Shader.h"
 #include "Vertex.h"
@@ -38,12 +39,13 @@ int main(int argc, char ** argsv)
 		return 1;
 	}
 
+	
+
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
 	//Initialize GLEW
 	glewExperimental = GL_TRUE;
 	GLenum glewError = glewInit();
@@ -60,13 +62,13 @@ int main(int argc, char ** argsv)
 
 	// An array of 3 vectors which represents 3 vertices
 	Vertex vertices[] = {
-		{-1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V0
-		{1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V1
-		{0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V2
-		{2.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f},		// V3
-		{-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V4
-		{1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V5
-		{0.0f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f},	// V6
+		{-1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V0
+		{1.0f, -1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V1
+		{1.0f, 1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},		// V2
+		{-1.0f,  1.0f, 0.0f, 0.1f, 0.1f, 0.1f, 1.0f},	// V3
+		{-1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},	// V4
+		{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V5
+		{0.0f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},	// V6
 		{2.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.5f, 1.0f},		// V7
 		{-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f},	// V8
 		{1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},	// V9
@@ -87,7 +89,11 @@ int main(int argc, char ** argsv)
 
 
 	// Create buffer function
-	unsigned int indicies[] = { 0, 1, 2, 1, 3, 2, 1, 5, 0, 0, 5, 4 };
+	unsigned int indicies[] = { 2, 1, 0, 
+								3, 0, 2,
+								0, 3, 5,
+								5, 0, 4 
+	};
 
 	GLuint elementBuffer;
 	glGenBuffers(1, &elementBuffer);
@@ -108,12 +114,22 @@ int main(int argc, char ** argsv)
 	glm::mat4 translation = glm::mat4(1.0f);
 	// Create a translation matrix from given position
 	translation = glm::translate(translation, position);
+	
+	glm::vec3 worldSpaceUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	// Camera initialization
-	glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, -10.0f);
+	glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, 10.0f);
 	glm::vec3 camTarget = position;
-	glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::mat4 view = glm::lookAt(camPosition, camTarget, camUp);
+	glm::vec3 camDirection = glm::normalize(camPosition - camTarget);
+	glm::vec3 camRight = glm::normalize(glm::cross(worldSpaceUp, camDirection));
+	glm::vec3 camUp = glm::cross(camDirection, camRight);
+
+	#pragma region Camera Free Rotation
+	const float radius = 10.0f;
+	
+	#pragma endregion
+
+	glm::mat4 view = glm::lookAt(camPosition, camTarget, worldSpaceUp);
 
 	//Perspective Matrix. Every value must be a float
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f/720.0f, 0.1f, 100.0f);
